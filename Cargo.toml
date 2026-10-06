@@ -8,6 +8,7 @@ edition = "2021"
 rust-version = "1.82"
 authors = ["Bas Lentfert"]
 license = "MIT"
+repository = "https://github.com/baslentfert/dupefinder"
 
 [workspace.dependencies]
 dupe-core = { path = "crates/dupe-core" }

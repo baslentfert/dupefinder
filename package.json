@@ -1,7 +1,11 @@
 {
   "name": "dupefinder",
   "version": "0.1.0",
-  "description": "",
+  "description": "A Windows tray app that finds duplicate files, look-alike photos and orphaned leftovers.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baslentfert/dupefinder.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite dev",
