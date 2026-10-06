@@ -1,0 +1,28 @@
+# Build output
+/target
+/build
+/.svelte-kit
+/package
+node_modules
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.snk
+signing/
+
+# Scan output: these contain real paths from whoever ran the scan
+*.report.html
+*.report.csv
+
+# Personal notes, not part of the project
+instr.txt
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

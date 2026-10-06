@@ -1,0 +1,57 @@
+[package]
+name = "dupe-core"
+description = "Fast duplicate + similar-image detection engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+tracing.workspace = true
+
+rayon.workspace = true
+crossbeam-channel.workspace = true
+dashmap.workspace = true
+parking_lot.workspace = true
+
+blake3.workspace = true
+xxhash-rust.workspace = true
+memmap2.workspace = true
+ignore.workspace = true
+
+image.workspace = true
+kamadak-exif.workspace = true
+
+redb.workspace = true
+trash.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Com",
+    "Win32_System_Threading",
+    "Win32_Security",
+    "Win32_Graphics_Imaging",
+    "Win32_Globalization",
+    "Win32_System_Restore",
+] }
+ntfs-reader = "0.4"
+winreg.workspace = true
+lnk.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+serde_json.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[features]
+default = ["mft", "wic"]
+# NTFS MFT enumeration: whole-volume listing in seconds, needs admin.
+mft = []
+# Windows Imaging Component decoding: HEIC/HEIF + camera RAW via OS codecs.
+wic = []

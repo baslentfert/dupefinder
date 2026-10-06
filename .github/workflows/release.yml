@@ -1,0 +1,101 @@
+name: Release
+
+# Pushing a version tag builds the Windows binaries and publishes them as a
+# GitHub release. Nothing is signed — see the README for what that means for
+# the people downloading it.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      - run: pnpm install --frozen-lockfile
+
+      # The engine's own tests. A release that cannot pass them should not
+      # reach anyone's machine.
+      - run: cargo test -p dupe-core --release
+
+      - run: pnpm tauri build
+
+      # Three things worth shipping: the installer most people want, the MSI
+      # for anyone deploying it centrally, and the bare executable for people
+      # who would rather not install anything at all.
+      - name: Collect the artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dist | Out-Null
+          $version = '${{ github.ref_name }}' -replace '^v', ''
+
+          Copy-Item 'target/release/bundle/nsis/*-setup.exe' "dist/DuplicateFinder-$version-setup.exe"
+          Copy-Item 'target/release/bundle/msi/*.msi'        "dist/DuplicateFinder-$version.msi"
+          Copy-Item 'target/release/dupefinder.exe'          "dist/DuplicateFinder-$version-portable.exe"
+
+          # Published alongside the downloads so anyone can check that the file
+          # they got is the file this workflow built. It is not a signature —
+          # it only helps against a corrupted or swapped download, and only if
+          # the checksum itself is read from the release page.
+          Get-ChildItem dist -File | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash  $($_.Name)"
+          } | Set-Content -Path dist/SHA256SUMS.txt -Encoding utf8
+
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: dist/*
+          body: |
+            ## Downloads
+
+            | File | For |
+            | --- | --- |
+            | `DuplicateFinder-*-setup.exe` | Most people. Installs for the current user, no administrator rights needed. |
+            | `DuplicateFinder-*-portable.exe` | Running it without installing. Put it anywhere. |
+            | `DuplicateFinder-*.msi` | Deploying it centrally. |
+
+            `SHA256SUMS.txt` lists the checksum of each file.
+
+            ## These downloads are not code-signed
+
+            Windows will warn you. SmartScreen shows **"Windows protected your
+            PC"**, and you have to click **More info → Run anyway** to continue.
+
+            That warning is accurate: the file carries no certificate, so
+            Windows cannot tell you who published it. A code-signing
+            certificate costs a few hundred euro a year, and this is a free
+            project.
+
+            If you would rather not trust an unsigned binary — a reasonable
+            position — build it yourself. The README has the steps; it takes
+            one command once the toolchain is installed.
+
+            ## Requirements
+
+            Windows 10 1803 or newer, 64-bit. WebView2 is included in Windows
+            11 and current Windows 10; the installer fetches it if missing.

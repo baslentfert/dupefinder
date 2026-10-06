@@ -1,0 +1,8 @@
+# Normalise to LF in the repository; Git still checks out CRLF on Windows
+# where the platform wants it. Without this the workflow files and the Rust
+# sources change line endings depending on who committed them.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary
